@@ -7,11 +7,10 @@ async function getProducts() {
 getProducts();
 displayCart();
 
-let total  = 0  ;
+let total  = 0;
+let totalqty = 0;
 
 // si mon panier est vide :
-
-
 
 async function displayCart() {
   if (!LocalStorage) {
@@ -24,12 +23,18 @@ async function displayCart() {
     // si mon panier n'est pas vide :
   } else {
     let result = await getProducts().then((products) => {
+
       for (let i = 0; i < LocalStorage.length; i++) {
-        const currentProduct = products.find(
-          (product) => product._id === LocalStorage[i].idKanap);
+
+        const currentProduct = products.find((product) => product._id === LocalStorage[i].idKanap);
 
         console.log('currentProduct', currentProduct);
+
+
         total += currentProduct.price * parseInt(LocalStorage[i].qtyKanap);
+        totalqty += parseInt(LocalStorage[i].qtyKanap) ;
+
+
 
         // Création d'une balise "article" et insertion dans la section
         let Article = document.createElement('Article');
@@ -40,10 +45,7 @@ async function displayCart() {
         // Insertion de l'élément "div" pour l'image produit
         let DivImg = document.createElement('div');
         Article.appendChild(DivImg);
-        DivImg.className = 'cart__item__img';
-
-
-        
+        DivImg.className = 'cart__item__img';        
 
         // Insertion de l'image
         let imgProduit = document.createElement('img');
@@ -136,46 +138,52 @@ async function displayCart() {
 
       Div__cart__item__content__settings__delete.appendChild(inserSupp);
       
-      
+      // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+      let AffichPrice = document.getElementById('totalPrice');
+      AffichPrice.textContent = total;
+
+      let AffichTotalqty = document.getElementById('totalQuantity');
+      AffichTotalqty.textContent = totalqty;
 
       console.log(Article);
+      console.log("total",total)
+      console.log("totalqty",totalqty);
+
+      
+
+// suite modif btn = ajoute au totaux
+      
+function modifyQtt() {
+  let qttModif = document.querySelectorAll(".itemQuantity");
+
+  for (let i = 0; i < qttModif.length; i++){
+      qttModif[i].addEventListener("change" , (event) => {
+          event.preventDefault();
+
+          //Selection de l'element à modifier en fonction de son id 
+          let quantityModif = LocalStorage[i].qtyKanap;
+          let qttModifValue = qttModif[i].valueAsNumber;
+          
+          const resultFind = LocalStorage.find((el) => el.qttModifValue !== quantityModif);
+
+          resultFind.qtyKanap = qttModifValue;
+          LocalStorage[i].qtyKanap = resultFind.qtyKanap;
+
+          localStorage.setItem("cart", JSON.stringify(LocalStorage));
+      
+          // refresh 
+          location.reload();
+      })
+  }
+}
+modifyQtt();
+
     }
-    console.log("total",total)
     });
   }
 }
-// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Récupération du total des quantités + prix :
-// fonction récup totaux Qté :
-
-
-
-// fonction récup totaux price : 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //***************************************************************************************************************************************************************************************************** */
@@ -297,9 +305,40 @@ function postForm() {
     //Construction d'un array d'id depuis le local storage
     let products = [];
     for (let i = 0; i < localStorage.length; i++) {
-      products.push(productLocalStorage[i].idKanap);
+      products.push(LocalStorage[i].idKanap);
     }
-
-    console.log(products);
+    
+      
+  
+  //  valeurs du formulaire et les produits sélectionnés dans un objet
+    
+    const sendFormData = {
+      contact,
+      products,
+    }
+  
+    //  formulaire + localStorage (sendFormData) que j'envoie au serveur
+    
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(sendFormData),
+      headers: { 
+        'Content-Type': 'application/json',
+      }
+    };
+  
+    fetch("http://localhost:3000/api/products/order", options)
+        .then(response => response.json())
+        .then(data => {
+        localStorage.setItem('orderId', data.orderId);
+        document.location.href = 'confirmation.html?id='+ data.orderId;
+      });
+  
+  
+  
+  
+  
+  
   });
 }
+postForm();
