@@ -6,9 +6,30 @@ async function getProducts() {
 }
 getProducts();
 displayCart();
+function getTotal(products)  {
+  let total  = 0;
+  let totalqty = 0;
+  for (let i = 0; i < LocalStorage.length; i++) {
 
-let total  = 0;
-let totalqty = 0;
+    const currentProduct = products.find((product) => product._id === LocalStorage[i].idKanap);
+
+   // console.log('currentProduct', currentProduct);
+
+
+    total += currentProduct.price * parseInt(LocalStorage[i].qtyKanap);
+    totalqty += parseInt(LocalStorage[i].qtyKanap) ;
+    
+
+
+  }
+  let AffichPrice = document.getElementById('totalPrice');
+  AffichPrice.textContent = total;
+
+  let AffichTotalqty = document.getElementById('totalQuantity');
+  AffichTotalqty.textContent = totalqty;
+}
+
+
 
 // si mon panier est vide :
 
@@ -28,11 +49,11 @@ async function displayCart() {
 
         const currentProduct = products.find((product) => product._id === LocalStorage[i].idKanap);
 
-        console.log('currentProduct', currentProduct);
+       // console.log('currentProduct', currentProduct);
 
 
-        total += currentProduct.price * parseInt(LocalStorage[i].qtyKanap);
-        totalqty += parseInt(LocalStorage[i].qtyKanap) ;
+      //  total += currentProduct.price * parseInt(LocalStorage[i].qtyKanap);
+       // totalqty += parseInt(LocalStorage[i].qtyKanap) ;
 
 
 
@@ -135,57 +156,56 @@ async function displayCart() {
 
         location.reload();
       })
+     
 
       Div__cart__item__content__settings__delete.appendChild(inserSupp);
       
       // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-      let AffichPrice = document.getElementById('totalPrice');
-      AffichPrice.textContent = total;
+     
 
-      let AffichTotalqty = document.getElementById('totalQuantity');
-      AffichTotalqty.textContent = totalqty;
-
-      console.log(Article);
+      /*console.log(Article);
       console.log("total",total)
-      console.log("totalqty",totalqty);
+      console.log("totalqty",totalqty);*/
 
       
 
 // suite modif btn = ajoute au totaux
       
-function modifyQtt() {
-  let qttModif = document.querySelectorAll(".itemQuantity");
 
-  for (let i = 0; i < qttModif.length; i++){
-      qttModif[i].addEventListener("change" , (event) => {
-          event.preventDefault();
 
-          //Selection de l'element à modifier en fonction de son id 
-          let quantityModif = LocalStorage[i].qtyKanap;
-          let qttModifValue = qttModif[i].valueAsNumber;
-          
-          const resultFind = LocalStorage.find((el) => el.qttModifValue !== quantityModif);
-
-          resultFind.qtyKanap = qttModifValue;
-          LocalStorage[i].qtyKanap = resultFind.qtyKanap;
-
-          localStorage.setItem("cart", JSON.stringify(LocalStorage));
-      
-          // refresh 
-          location.reload();
-      })
-  }
-}
-modifyQtt();
 
     }
+    getTotal(products) ;
+    modifyQtt(products);
     });
   }
 }
 
+// Fonction destinée à récupérer le bon index d'un produit
+const addToLocalStorage = (element) => {
+  let article = element.closest('article.cart__item');
+  console.log('LocalStorage',LocalStorage) ;
+  const index = LocalStorage.findIndex(object => object.idKanap === article.dataset.id && object.color === article.dataset.color);
+  LocalStorage[index].qtyKanap = parseInt(element.value);
+  localStorage.setItem('cart', JSON.stringify(LocalStorage));
+  return index
+}
 
+
+
+
+
+function modifyQtt(products) {
+  document.querySelectorAll("input.itemQuantity").forEach((element) => {
+    element.addEventListener('change', () => {
+        const index = addToLocalStorage(element);
+        LocalStorage[index].qtyKanap = parseInt(element.value);
+       getTotal(products)
+    })
+})
+}
 //***************************************************************************************************************************************************************************************************** */
 //***************************************************************************************************************************************************************************************************** */
 //***************************************************************************************************************************************************************************************************** */
@@ -198,6 +218,7 @@ modifyQtt();
 // formulaire avec regex :
 
 function getForm() {
+  let validate = true  ;
   // Ajout des Regex
   let form = document.querySelector('.cart__order__form');
 
@@ -237,8 +258,10 @@ function getForm() {
 
     if (charRegExp.test(inputFirstName.value)) {
       firstNameErrorMsg.innerHTML = '';
+      
     } else {
       firstNameErrorMsg.innerHTML = 'Veuillez renseigner ce champ.';
+      validate = false ;
     }
   };
 
@@ -250,6 +273,7 @@ function getForm() {
       lastNameErrorMsg.innerHTML = '';
     } else {
       lastNameErrorMsg.innerHTML = 'Veuillez renseigner ce champ.';
+      validate = false ;
     }
   };
 
@@ -261,6 +285,7 @@ function getForm() {
       addressErrorMsg.innerHTML = '';
     } else {
       addressErrorMsg.innerHTML = 'Veuillez renseigner ce champ.';
+      validate = false ;
     }
   };
 
@@ -272,6 +297,7 @@ function getForm() {
       cityErrorMsg.innerHTML = '';
     } else {
       cityErrorMsg.innerHTML = 'Veuillez renseigner ce champ.';
+      validate = false ;
     }
   };
 
@@ -283,15 +309,21 @@ function getForm() {
       emailErrorMsg.innerHTML = '';
     } else {
       emailErrorMsg.innerHTML = 'Veuillez renseigner votre email.';
+      validate = false ;
     }
   };
+  return validate ;
 }
-getForm();
+
 
 function postForm() {
   const order = document.getElementById('order');
   order.addEventListener('click', (event) => {
-    event.preventDefault();
+    console.log('getForm',getForm()) ;
+    if(getForm()) {
+
+    
+   // event.preventDefault();
 
     // je récupère les données du formulaire dans un objet
     const contact = {
@@ -337,7 +369,7 @@ function postForm() {
   
   
   
-  
+    }
   
   });
 }
